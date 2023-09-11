@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+const OnlyID int = 1
+const AllField int = 2
+
 type item struct {
 	ID   int
 	Name string
@@ -16,6 +19,25 @@ var product = []item{
 	{ID: 1, Name: "Product 1"},
 	{ID: 2, Name: "Product 2"},
 	{ID: 3, Name: "Product 3"},
+}
+
+func CheckValid(check item, flags int) bool { // true - ошибка, false - ошибок нет
+	switch flags {
+	case 1: // Check valid ID
+		if check.ID == 0 {
+			return true
+		} else {
+			return false
+		}
+	case 2: // Check valid ID и Name
+		if check.ID == 0 || len(check.Name) == 0 {
+			return true
+		} else {
+			return false
+		}
+	default:
+		return false
+	}
 }
 
 func main() {
@@ -44,23 +66,29 @@ func personHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getProduct(w http.ResponseWriter, r *http.Request) {
+func getProduct(w http.ResponseWriter, r *http.Request) { // GET
 	json.NewEncoder(w).Encode(product)
 	fmt.Fprintf(w, "get product: '%v'", product)
 }
 
-func postProduct(w http.ResponseWriter, r *http.Request) {
+func postProduct(w http.ResponseWriter, r *http.Request) { // POST
 	var newProduct item
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if CheckValid(newProduct, AllField) { // Проверка на пустые поля
+		fmt.Fprintf(w, "Invalid parameters!")
+		return
+	}
+
 	product = append(product, newProduct)
 	fmt.Fprintf(w, "post new product: '%v'", newProduct)
 }
 
-func putProduct(w http.ResponseWriter, r *http.Request) {
+func putProduct(w http.ResponseWriter, r *http.Request) { // PUT
 
 	var changeProduct item
 	var productIndex int = -1
@@ -68,6 +96,11 @@ func putProduct(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&changeProduct)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if CheckValid(changeProduct, AllField) { // Проверка на пустые поля
+		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
 
@@ -98,6 +131,11 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&deleteProduct)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if CheckValid(deleteProduct, OnlyID) { // Проверка на ID, пустой или нет
+		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
 
