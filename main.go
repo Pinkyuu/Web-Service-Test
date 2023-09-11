@@ -19,6 +19,7 @@ var product = []item{
 }
 
 func main() {
+
 	http.HandleFunc("/product", personHandler)
 	http.HandleFunc("/health", healthCheckHandler)
 	log.Println("Server start listen port 8080!")
@@ -36,6 +37,8 @@ func personHandler(w http.ResponseWriter, r *http.Request) {
 		postProduct(w, r)
 	case http.MethodPut:
 		putProduct(w, r)
+	case http.MethodDelete:
+		deleteProduct(w, r)
 	default:
 		http.Error(w, "invalid http method", http.StatusMethodNotAllowed)
 	}
@@ -60,7 +63,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) {
 func putProduct(w http.ResponseWriter, r *http.Request) {
 
 	var changeProduct item
-	productIndex := 0
+	var productIndex int = -1
 
 	err := json.NewDecoder(r.Body).Decode(&changeProduct)
 	if err != nil {
@@ -75,17 +78,46 @@ func putProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if changeProduct.ID == 0 {
+	if productIndex < 0 {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Product not found! ")
 		return
 	}
 
-	json.NewDecoder(r.Body).Decode(&product)
 	product[productIndex] = changeProduct
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(product)
+	fmt.Fprintf(w, "Put product: '%v'", changeProduct)
+
+}
+
+func deleteProduct(w http.ResponseWriter, r *http.Request) {
+
+	var deleteProduct item
+	var productIndex int = -1
+
+	err := json.NewDecoder(r.Body).Decode(&deleteProduct)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for i, p := range product {
+		if p.ID == deleteProduct.ID {
+			productIndex = i
+			break
+		}
+	}
+
+	if productIndex < 0 {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "Product not found! ")
+		return
+	}
+
+	fmt.Fprintf(w, "delete product: '%v'", product[productIndex])
+	w.WriteHeader(http.StatusOK)
+	product = append(product[:productIndex], product[productIndex+1:]...)
+
 }
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {

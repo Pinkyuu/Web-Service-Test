@@ -10,7 +10,7 @@ Content-Type: application/json
 
 {
     
-    "id": 35,
+    "id": 3,
     "name": "Milk"
 }
 
@@ -32,4 +32,14 @@ Content-Type: application/json
 {
     "id": 35,
     "name": ""
+}
+
+## Delete Product
+
+DELETE  http://localhost:8080/product
+Content-Type: application/application/json
+
+{
+    "id": 3,
+    "name": "New Product"
 }
