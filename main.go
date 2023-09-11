@@ -59,7 +59,33 @@ func postProduct(w http.ResponseWriter, r *http.Request) {
 
 func putProduct(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Fprintf(w, "putProduct")
+	var changeProduct item
+	productIndex := 0
+
+	err := json.NewDecoder(r.Body).Decode(&changeProduct)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for i, p := range product {
+		if p.ID == changeProduct.ID {
+			productIndex = i
+			break
+		}
+	}
+
+	if changeProduct.ID == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "Product not found! ")
+		return
+	}
+
+	json.NewDecoder(r.Body).Decode(&product)
+	product[productIndex] = changeProduct
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(product)
 }
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {

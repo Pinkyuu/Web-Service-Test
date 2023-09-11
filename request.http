@@ -9,8 +9,9 @@ POST http://localhost:8080/product
 Content-Type: application/json
 
 {
-    "name": "Milk",
-    "id": 35
+    
+    "id": 35,
+    "name": "Milk"
 }
 
 ## Put Product
@@ -19,8 +20,8 @@ PUT http://localhost:8080/product
 Content-Type: application/application/json
 
 {
-    "name": "New Product Name",
-    "id": "5"
+    "id": 3,
+    "name": "New Product"
 }
 
 ## Проверка на пустое поле
