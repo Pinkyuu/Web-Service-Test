@@ -11,14 +11,16 @@ const OnlyID int = 1
 const AllField int = 2
 
 type item struct {
-	ID   int
-	Name string
+	ID         int
+	Name       string
+	Quantity   int
+	Unit_coast int
 }
 
 var product = []item{
-	{ID: 1, Name: "Product 1"},
-	{ID: 2, Name: "Product 2"},
-	{ID: 3, Name: "Product 3"},
+	{ID: 1, Name: "Product 1", Quantity: 10, Unit_coast: 100},
+	{ID: 2, Name: "Product 2", Quantity: 20, Unit_coast: 150},
+	{ID: 3, Name: "Product 3", Quantity: 100, Unit_coast: 10},
 }
 
 func CheckValid(check item, flags int) bool { // true - ошибка, false - ошибок нет
@@ -54,7 +56,7 @@ func main() {
 func personHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getProduct(w, r)
+		getProductAll(w, r)
 	case http.MethodPost:
 		postProduct(w, r)
 	case http.MethodPut:
@@ -66,9 +68,14 @@ func personHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getProduct(w http.ResponseWriter, r *http.Request) { // GET
-	json.NewEncoder(w).Encode(product)
-	fmt.Fprintf(w, "get product: '%v'", product)
+func getProductAll(w http.ResponseWriter, r *http.Request) { // GET
+	jsonBytes, err := json.Marshal(product)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
 }
 
 func postProduct(w http.ResponseWriter, r *http.Request) { // POST
