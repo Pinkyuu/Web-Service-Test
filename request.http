@@ -1,0 +1,34 @@
+## Chech work web-service
+GET http://localhost:8080/health
+
+## Get Product
+GET http://localhost:8080/product
+
+### Post Product
+POST http://localhost:8080/product
+Content-Type: application/json
+
+{
+    "name": "Milk",
+    "id": 35
+}
+
+## Put Product
+
+PUT http://localhost:8080/product
+Content-Type: application/application/json
+
+{
+    "name": "New Product Name",
+    "id": "5"
+}
+
+## Проверка на пустое поле
+
+POST http://localhost:8080/product 
+Content-Type: application/json
+
+{
+    "id": 35,
+    "name": ""
+}
