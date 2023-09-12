@@ -1,7 +1,7 @@
 ## Chech work web-service
 GET http://localhost:8080/health
 
-## Get Product
+### Get Product
 GET http://localhost:8080/product
 
 ### Post Product
@@ -15,7 +15,7 @@ Content-Type: application/json
     "Unit_coast": 10
 }
 
-## Put Product
+### Put Product
 
 PUT http://localhost:8080/product
 Content-Type: application/application/json
@@ -25,7 +25,7 @@ Content-Type: application/application/json
     "name": "New Product"
 }
 
-## Проверка на пустое поле
+### Проверка на пустое поле
 
 POST http://localhost:8080/product 
 Content-Type: application/json
@@ -35,7 +35,7 @@ Content-Type: application/json
     "name": ""
 }
 
-## Delete Product
+### Delete Product
 
 DELETE  http://localhost:8080/product
 Content-Type: application/application/json
@@ -45,4 +45,5 @@ Content-Type: application/application/json
     "name": "New Product"
 }
 
-GET http://localhost:8080/product/1
+###
+GET http://localhost:8080/product/3

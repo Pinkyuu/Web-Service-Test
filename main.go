@@ -46,11 +46,11 @@ func CheckValid(check item, flags int) bool { // true - ошибка, false - о
 
 func main() {
 
-	http.HandleFunc("/product", personHandler)
-	http.HandleFunc("/health", healthCheckHandler)
-	http.HandleFunc("/product/{number}", personHandlerByIndex)
+	r := mux.NewRouter()
+	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
+	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET")
 	log.Println("Server start listen port 8080!")
-	err := http.ListenAndServe("localhost:8080", nil)
+	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,42 +62,9 @@ func personHandler(w http.ResponseWriter, r *http.Request) {
 		getProductAll(w, r)
 	case http.MethodPost:
 		postProduct(w, r)
-	case http.MethodPut:
-		putProduct(w, r)
-	case http.MethodDelete:
-		deleteProduct(w, r)
 	default:
 		http.Error(w, "invalid http method", http.StatusMethodNotAllowed)
 	}
-}
-
-func personHandlerByIndex(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		getProduct(w, r)
-	}
-}
-
-func getProduct(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
-	//var productIndex int = -1
-	vars := mux.Vars(r)
-	number := vars["number"]
-	fmt.Fprintf(w, "ID: '%v'", number)
-	/*for i, p := range product {
-		if p.ID == number {
-			productIndex = i
-			break
-		}
-	}
-
-	jsonBytes, err := json.Marshal(product[productIndex])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonBytes)*/
-
 }
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
@@ -134,7 +101,28 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 	w.Write(jsonBytes)
 }
 
-func putProduct(w http.ResponseWriter, r *http.Request) { // PUT
+func personHandlerByIndex(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		getProductByIndex(w, r)
+	case http.MethodPut:
+		PutProductByIndex(w, r)
+	case http.MethodDelete:
+		DeleteProductByIndex(w, r)
+	default:
+		http.Error(w, "invalid http method", http.StatusMethodNotAllowed)
+	}
+}
+
+func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
+
+	vars := mux.Vars(r)
+	number := vars["id"]
+	fmt.Fprintf(w, "ID: '%v'", number)
+
+}
+
+func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	var changeProduct item
 	var productIndex int = -1
@@ -169,7 +157,7 @@ func putProduct(w http.ResponseWriter, r *http.Request) { // PUT
 
 }
 
-func deleteProduct(w http.ResponseWriter, r *http.Request) {
+func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 
 	var deleteProduct item
 	var productIndex int = -1
@@ -202,8 +190,4 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	product = append(product[:productIndex], product[productIndex+1:]...)
 
-}
-
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Web-Service is working in normal mode! ")
 }
