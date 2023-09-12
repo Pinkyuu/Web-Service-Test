@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 const OnlyID int = 1
@@ -32,7 +34,7 @@ func CheckValid(check item, flags int) bool { // true - ошибка, false - о
 			return false
 		}
 	case 2: // Check valid ID и Name
-		if check.ID == 0 || len(check.Name) == 0 {
+		if check.ID == 0 || len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
 			return true
 		} else {
 			return false
@@ -46,6 +48,7 @@ func main() {
 
 	http.HandleFunc("/product", personHandler)
 	http.HandleFunc("/health", healthCheckHandler)
+	http.HandleFunc("/product/{number}", personHandlerByIndex)
 	log.Println("Server start listen port 8080!")
 	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
@@ -68,8 +71,37 @@ func personHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getProductAll(w http.ResponseWriter, r *http.Request) { // GET
-	jsonBytes, err := json.Marshal(product)
+func personHandlerByIndex(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		getProduct(w, r)
+	}
+}
+
+func getProduct(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
+	//var productIndex int = -1
+	vars := mux.Vars(r)
+	number := vars["number"]
+	fmt.Fprintf(w, "ID: '%v'", number)
+	/*for i, p := range product {
+		if p.ID == number {
+			productIndex = i
+			break
+		}
+	}
+
+	jsonBytes, err := json.Marshal(product[productIndex])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)*/
+
+}
+
+func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
+	jsonBytes, err := json.Marshal(product) // todo:Проверять, пустой ли Product
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -78,7 +110,7 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET
 	w.Write(jsonBytes)
 }
 
-func postProduct(w http.ResponseWriter, r *http.Request) { // POST
+func postProduct(w http.ResponseWriter, r *http.Request) { // POST - создать новую запись о продукте
 	var newProduct item
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
 	if err != nil {
@@ -92,7 +124,14 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST
 	}
 
 	product = append(product, newProduct)
-	fmt.Fprintf(w, "post new product: '%v'", newProduct)
+
+	jsonBytes, err := json.Marshal(newProduct.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
 }
 
 func putProduct(w http.ResponseWriter, r *http.Request) { // PUT

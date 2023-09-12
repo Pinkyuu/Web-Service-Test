@@ -10,7 +10,9 @@ Content-Type: application/json
 
 {
     "id": 3,
-    "name": "Milk"
+    "name": "Milk",
+    "Quantity": 100, 
+    "Unit_coast": 10
 }
 
 ## Put Product
@@ -42,3 +44,5 @@ Content-Type: application/application/json
     "id": 3,
     "name": "New Product"
 }
+
+GET http://localhost:8080/product/1
