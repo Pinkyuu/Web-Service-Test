@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -34,7 +35,7 @@ func CheckValid(check item, flags int) bool { // true - ошибка, false - о
 			return false
 		}
 	case 2: // Check valid ID и Name
-		if check.ID == 0 || len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
+		if len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
 			return true
 		} else {
 			return false
@@ -48,7 +49,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
-	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET")
+	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET", "PUT", "DELETE")
 	log.Println("Server start listen port 8080!")
 	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
@@ -117,8 +118,25 @@ func personHandlerByIndex(w http.ResponseWriter, r *http.Request) {
 func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
 
 	vars := mux.Vars(r)
-	number := vars["id"]
-	fmt.Fprintf(w, "ID: '%v'", number)
+	number, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	for _, p := range product {
+		if p.ID == number {
+			jsonBytes, err := json.Marshal(p) // todo:Проверять, пустой ли Product
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(jsonBytes)
+				break
+			}
+		}
+	}
 
 }
 
@@ -133,13 +151,23 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
+	vars := mux.Vars(r) // Извлекаем ID
+	number, err := strconv.Atoi(vars["id"])
+	if err != nil { // Проверяем на ошибки
+		log.Fatal(err)
+		return
+	}
+
+	changeProduct.ID = number
+	fmt.Fprintf(w, "Тут id: '%v'", number)
+
 	if CheckValid(changeProduct, AllField) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
 
 	for i, p := range product {
-		if p.ID == changeProduct.ID {
+		if p.ID == number {
 			productIndex = i
 			break
 		}
@@ -151,43 +179,29 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
-	product[productIndex] = changeProduct
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Put product: '%v'", changeProduct)
+	jsonBytes, err := json.Marshal(changeProduct) // todo:Проверять, пустой ли Product
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
 
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 
-	var deleteProduct item
-	var productIndex int = -1
-
-	err := json.NewDecoder(r.Body).Decode(&deleteProduct)
+	vars := mux.Vars(r)
+	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if CheckValid(deleteProduct, OnlyID) { // Проверка на ID, пустой или нет
-		fmt.Fprintf(w, "Invalid parameters!")
+		log.Fatal(err)
 		return
 	}
 
 	for i, p := range product {
-		if p.ID == deleteProduct.ID {
-			productIndex = i
+		if p.ID == number {
+			product = append(product[:i], product[i+1:]...)
 			break
 		}
 	}
-
-	if productIndex < 0 {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Product not found! ")
-		return
-	}
-
-	fmt.Fprintf(w, "delete product: '%v'", product[productIndex])
-	w.WriteHeader(http.StatusOK)
-	product = append(product[:productIndex], product[productIndex+1:]...)
-
 }

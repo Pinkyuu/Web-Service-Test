@@ -17,17 +17,19 @@ Content-Type: application/json
 
 ### Put Product
 
-PUT http://localhost:8080/product
-Content-Type: application/application/json
+PUT http://localhost:8080/product/3
 
+Content-Type: application/application/json
 {
     "id": 3,
-    "name": "New Product"
+    "name": "Milk",
+    "Quantity": 100, 
+    "Unit_coast": 10
 }
 
 ### Проверка на пустое поле
 
-POST http://localhost:8080/product 
+POST http://localhost:8080/product
 Content-Type: application/json
 
 {
@@ -37,13 +39,7 @@ Content-Type: application/json
 
 ### Delete Product
 
-DELETE  http://localhost:8080/product
-Content-Type: application/application/json
-
-{
-    "id": 3,
-    "name": "New Product"
-}
+DELETE  http://localhost:8080/product/3
 
 ###
 GET http://localhost:8080/product/3
