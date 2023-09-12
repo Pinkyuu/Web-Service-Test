@@ -12,6 +12,7 @@ import (
 
 const OnlyID int = 1
 const AllField int = 2
+const Body int = 3
 
 type item struct {
 	ID         int
@@ -20,11 +21,7 @@ type item struct {
 	Unit_coast int
 }
 
-var product = []item{
-	{ID: 1, Name: "Product 1", Quantity: 10, Unit_coast: 100},
-	{ID: 2, Name: "Product 2", Quantity: 20, Unit_coast: 150},
-	{ID: 3, Name: "Product 3", Quantity: 100, Unit_coast: 10},
-}
+var product = []item{}
 
 func CheckValid(check item, flags int) bool { // true - ошибка, false - ошибок нет
 	switch flags {
@@ -35,7 +32,13 @@ func CheckValid(check item, flags int) bool { // true - ошибка, false - о
 			return false
 		}
 	case 2: // Check valid ID и Name
-		if len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
+		if check.ID == 0 || len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
+			return true
+		} else {
+			return false
+		}
+	case 3:
+		if len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 { // Проверка для записи
 			return true
 		} else {
 			return false
@@ -57,7 +60,7 @@ func main() {
 	}
 }
 
-func personHandler(w http.ResponseWriter, r *http.Request) {
+func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 	switch r.Method {
 	case http.MethodGet:
 		getProductAll(w, r)
@@ -86,7 +89,9 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	if CheckValid(newProduct, AllField) { // Проверка на пустые поля
+	newProduct.ID = len(product)
+
+	if CheckValid(newProduct, Body) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
@@ -102,7 +107,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 	w.Write(jsonBytes)
 }
 
-func personHandlerByIndex(w http.ResponseWriter, r *http.Request) {
+func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GET, PUT, DELETE
 	switch r.Method {
 	case http.MethodGet:
 		getProductByIndex(w, r)
@@ -143,7 +148,6 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	var changeProduct item
-	var productIndex int = -1
 
 	err := json.NewDecoder(r.Body).Decode(&changeProduct)
 	if err != nil {
@@ -159,7 +163,6 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 	}
 
 	changeProduct.ID = number
-	fmt.Fprintf(w, "Тут id: '%v'", number)
 
 	if CheckValid(changeProduct, AllField) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
@@ -168,25 +171,12 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	for i, p := range product {
 		if p.ID == number {
-			productIndex = i
-			break
+			product[i] = changeProduct
+			return
 		}
 	}
 
-	if productIndex < 0 {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Product not found! ")
-		return
-	}
-
-	jsonBytes, err := json.Marshal(changeProduct) // todo:Проверять, пустой ли Product
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonBytes)
-
+	fmt.Fprintf(w, "Product id: '%v' not found ", number)
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
@@ -201,6 +191,9 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 	for i, p := range product {
 		if p.ID == number {
 			product = append(product[:i], product[i+1:]...)
+			for a := i; a < len(product); a++ {
+				product[a].ID--
+			}
 			break
 		}
 	}
