@@ -10,15 +10,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const OnlyID int = 1
-const AllField int = 2
-const Body int = 3
+const (
+	OnlyID   int = 1
+	AllField int = 2
+	Body     int = 3
+)
 
 type item struct {
-	ID         int
-	Name       string
-	Quantity   int
-	Unit_coast int
+	ID         int    `json:"id"`
+	Name       string `json:"Name"`
+	Quantity   int    `json:"Quantity"`
+	Unit_coast int    `json:"Unit_coast"`
 }
 
 var product = []item{}
