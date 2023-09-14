@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,7 +9,20 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v4"
 )
+
+func getDBConnection() (*pgx.Conn, error) {
+	conn, err := pgx.Connect(context.Background(), "postgres://postgres:123@localhost/Web-Service")
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+func closeDBConnection(conn *pgx.Conn) {
+	conn.Close(context.Background())
+}
 
 const (
 	OnlyID   int = 1
@@ -74,6 +88,29 @@ func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 }
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
+
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer closeDBConnection(conn)
+
+	rows, err := conn.Query(context.Background(), "SELECT * FROM items")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var p item
+
+	for rows.Next() {
+		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_coast)
+		if err != nil {
+			panic(err)
+		}
+		product = append(product, p)
+	}
+
 	jsonBytes, err := json.Marshal(product) // todo:Проверять, пустой ли Product
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
