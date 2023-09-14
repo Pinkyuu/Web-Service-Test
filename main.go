@@ -36,33 +36,6 @@ type item struct {
 	Unit_coast int    `json:"Unit_coast"`
 }
 
-var product = []item{}
-
-func CheckValid(check item, flags int) bool { // true - ошибка, false - ошибок нет
-	switch flags {
-	case 1: // Check valid ID
-		if check.ID == 0 {
-			return true
-		} else {
-			return false
-		}
-	case 2: // Check valid ID и Name
-		if check.ID == 0 || len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
-			return true
-		} else {
-			return false
-		}
-	case 3:
-		if len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 { // Проверка для записи
-			return true
-		} else {
-			return false
-		}
-	default:
-		return false
-	}
-}
-
 func main() {
 
 	r := mux.NewRouter()
@@ -88,6 +61,7 @@ func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
 
+	var product []item
 	var p item
 
 	conn, err := getDBConnection()
@@ -110,14 +84,13 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 		product = append(product, p)
 	}
 
-	jsonBytes, err := json.Marshal(product) // todo:Проверять, пустой ли Product
+	jsonBytes, err := json.Marshal(product)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonBytes)
-	product = nil // Очистка product
 }
 
 func postProduct(w http.ResponseWriter, r *http.Request) { // POST - создать новую запись о продукте
@@ -138,13 +111,12 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 	if err != nil {
 		panic(err)
 	}
-	var id int
-	err = row.Scan(&id)
+	err = row.Scan(&newProduct.ID)
 	if err != nil {
 		panic(err)
 	}
 
-	jsonBytes, err := json.Marshal(id)
+	jsonBytes, err := json.Marshal(newProduct.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
