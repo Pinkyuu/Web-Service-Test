@@ -89,6 +89,8 @@ func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
 
+	var p item
+
 	conn, err := getDBConnection()
 	if err != nil {
 		panic(err)
@@ -100,9 +102,6 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 		panic(err)
 	}
 	defer rows.Close()
-
-	var product = []item{} // Подумать как изменить
-	var p item
 
 	for rows.Next() {
 		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_coast)
@@ -119,6 +118,7 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonBytes)
+	product = nil // Очистка product
 }
 
 func postProduct(w http.ResponseWriter, r *http.Request) { // POST - создать новую запись о продукте
@@ -129,14 +129,11 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	newProduct.ID = len(product)
-
-	if CheckValid(newProduct, Body) { // Проверка на пустые поля
-		fmt.Fprintf(w, "Invalid parameters!")
-		return
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
 	}
-
-	product = append(product, newProduct)
+	defer closeDBConnection(conn)
 
 	jsonBytes, err := json.Marshal(newProduct.ID)
 	if err != nil {
