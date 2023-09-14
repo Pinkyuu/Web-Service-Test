@@ -101,6 +101,7 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 	}
 	defer rows.Close()
 
+	var product = []item{} // Подумать как изменить
 	var p item
 
 	for rows.Next() {
