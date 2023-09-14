@@ -169,6 +169,8 @@ func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GE
 
 func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
 
+	var p item
+
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -176,9 +178,25 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 		return
 	}
 
-	for _, p := range product {
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer closeDBConnection(conn)
+
+	rows, err := conn.Query(context.Background(), "SELECT * FROM items")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_coast) // Подумать, как можно не записывать все поля, а только ID
+		if err != nil {
+			panic(err)
+		}
 		if p.ID == number {
-			jsonBytes, err := json.Marshal(p) // todo:Проверять, пустой ли Product
+			jsonBytes, err := json.Marshal(p)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -189,7 +207,9 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 			}
 		}
 	}
-
+	if p.ID != number {
+		fmt.Fprintf(w, "Not found product")
+	}
 }
 
 func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
