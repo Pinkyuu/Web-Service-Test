@@ -3,7 +3,7 @@
 GET http://localhost:8080/product
 
 ###
-GET http://localhost:8080/product/3
+GET http://localhost:8080/product/2
 
 ### Post Product
 POST http://localhost:8080/product

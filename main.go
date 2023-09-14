@@ -135,7 +135,17 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 	}
 	defer closeDBConnection(conn)
 
-	jsonBytes, err := json.Marshal(newProduct.ID)
+	row := conn.QueryRow(context.Background(), `insert into "items"("Name", "Quantity", "Unit_coast") values($1, $2, $3) RETURNING "ID"`, newProduct.Name, newProduct.Quantity, newProduct.Unit_coast)
+	if err != nil {
+		panic(err)
+	}
+	var id int
+	err = row.Scan(&id)
+	if err != nil {
+		panic(err)
+	}
+
+	jsonBytes, err := json.Marshal(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
