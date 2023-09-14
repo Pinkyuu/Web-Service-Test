@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -170,7 +169,6 @@ func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GE
 func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
 
 	var p item
-
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -184,32 +182,23 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 	}
 	defer closeDBConnection(conn)
 
-	rows, err := conn.Query(context.Background(), "SELECT * FROM items")
+	row := conn.QueryRow(context.Background(), `select "ID", "Name", "Quantity", "Unit_coast" FROM "items" WHERE "ID" = $1`, number)
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_coast) // Подумать, как можно не записывать все поля, а только ID
-		if err != nil {
-			panic(err)
-		}
-		if p.ID == number {
-			jsonBytes, err := json.Marshal(p)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(jsonBytes)
-				break
-			}
-		}
+	err = row.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_coast)
+	if err != nil {
+		panic(err)
 	}
-	if p.ID != number {
-		fmt.Fprintf(w, "Not found product")
+
+	jsonBytes, err := json.Marshal(p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
 }
 
 func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
@@ -235,12 +224,7 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 	}
 	defer closeDBConnection(conn)
 
-	a, err := conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 where "ID"=$4`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_coast, id)
-	if err != nil {
-		panic(err)
-	}
-
-	_ = a // Выглядит как костыль
+	conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 where "ID"=$4`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_coast, id)
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
@@ -252,13 +236,12 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for i, p := range product {
-		if p.ID == number {
-			product = append(product[:i], product[i+1:]...)
-			for a := i; a < len(product); a++ {
-				product[a].ID--
-			}
-			break
-		}
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
 	}
+	defer closeDBConnection(conn)
+
+	conn.Exec(context.Background(), `delete from "items" where "ID"=$1`, number)
+
 }

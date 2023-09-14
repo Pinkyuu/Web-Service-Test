@@ -3,7 +3,7 @@
 GET http://localhost:8080/product
 
 ###
-GET http://localhost:8080/product/5
+GET http://localhost:8080/product/3
 
 ### Post Product
 POST http://localhost:8080/product
@@ -22,7 +22,7 @@ Content-Type: application/json
 
 {
     "name": "Milk",
-    "Quantity": 150, 
+    "Quantity": 1500, 
     "Unit_coast": 10
 }
 
