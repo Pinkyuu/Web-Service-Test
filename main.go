@@ -223,27 +223,24 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 	}
 
 	vars := mux.Vars(r) // Извлекаем ID
-	number, err := strconv.Atoi(vars["id"])
+	id, err := strconv.Atoi(vars["id"])
 	if err != nil { // Проверяем на ошибки
 		log.Fatal(err)
 		return
 	}
 
-	changeProduct.ID = number
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer closeDBConnection(conn)
 
-	if CheckValid(changeProduct, AllField) { // Проверка на пустые поля
-		fmt.Fprintf(w, "Invalid parameters!")
-		return
+	a, err := conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 where "ID"=$4`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_coast, id)
+	if err != nil {
+		panic(err)
 	}
 
-	for i, p := range product {
-		if p.ID == number {
-			product[i] = changeProduct
-			return
-		}
-	}
-
-	fmt.Fprintf(w, "Product id: '%v' not found ", number)
+	_ = a // Выглядит как костыль
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
