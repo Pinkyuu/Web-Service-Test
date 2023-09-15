@@ -1,6 +1,7 @@
-package main
+package server
 
 import (
+	valid "Web-Service/pkg"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,46 +11,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const OnlyID int = 1
-const AllField int = 2
-const Body int = 3
-
-type item struct {
-	ID         int
-	Name       string
-	Quantity   int
-	Unit_coast int
+type Item struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Quantity   int    `json:"quantity"`
+	Unit_coast int    `json:"unit_coast"`
 }
 
-var product = []item{}
+var product = []Item{}
 
-func CheckValid(check item, flags int) bool { // true - ошибка, false - ошибок нет
-	switch flags {
-	case 1: // Check valid ID
-		if check.ID == 0 {
-			return true
-		} else {
-			return false
-		}
-	case 2: // Check valid ID и Name
-		if check.ID == 0 || len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
-			return true
-		} else {
-			return false
-		}
-	case 3:
-		if len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 { // Проверка для записи
-			return true
-		} else {
-			return false
-		}
-	default:
-		return false
-	}
-}
-
-func main() {
-
+func ServerRun() {
 	r := mux.NewRouter()
 	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
 	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET", "PUT", "DELETE")
@@ -82,7 +53,7 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 }
 
 func postProduct(w http.ResponseWriter, r *http.Request) { // POST - создать новую запись о продукте
-	var newProduct item
+	var newProduct Item
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -91,7 +62,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 
 	newProduct.ID = len(product)
 
-	if CheckValid(newProduct, Body) { // Проверка на пустые поля
+	if valid.CheckBody(newProduct.Name, newProduct.Quantity, newProduct.Unit_coast) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
@@ -125,8 +96,12 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if valid.CheckID(number) {
+		fmt.Fprintf(w, "Not correct ID: '%v'", number)
 	}
 
 	for _, p := range product {
@@ -147,7 +122,7 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 
 func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
-	var changeProduct item
+	var changeProduct Item
 
 	err := json.NewDecoder(r.Body).Decode(&changeProduct)
 	if err != nil {
@@ -158,13 +133,13 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 	vars := mux.Vars(r) // Извлекаем ID
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil { // Проверяем на ошибки
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	changeProduct.ID = number
 
-	if CheckValid(changeProduct, AllField) { // Проверка на пустые поля
+	if valid.CheckBody(changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_coast) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
@@ -184,7 +159,7 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
