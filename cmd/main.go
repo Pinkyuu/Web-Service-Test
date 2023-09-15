@@ -1,9 +1,9 @@
 package main
 
-const OnlyID int = 1
-const AllField int = 2
-const Body int = 3
+import (
+	server "Web-Service/api"
+)
 
 func main() {
-	serverRun()
+	server.ServerRun()
 }
