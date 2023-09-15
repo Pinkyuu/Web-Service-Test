@@ -11,10 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const OnlyID int = 1
-const AllField int = 2
-const Body int = 3
-
 type Item struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
