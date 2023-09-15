@@ -1,11 +1,5 @@
 package valid
 
-import (
-	"context"
-
-	"github.com/jackc/pgx/v4"
-)
-
 func CheckBody(Name string, Quantity int, Unit_coast int) bool { // true - ошибка, false - ошибок нет
 	if CheckName(Name) || CheckQuantity(Quantity) || CheckUnitCoast(Unit_coast) {
 		return true
@@ -44,20 +38,4 @@ func CheckUnitCoast(UnitCoast int) bool {
 	} else {
 		return false
 	}
-}
-
-func getDBConnection() (*pgx.Conn, error) {
-	config, err := pgx.ParseConfig("postgres://postgres:123@localhost/Web-Service")
-	if err != nil {
-		return nil, err
-	}
-	conn, err := pgx.ConnectConfig(context.Background(), config)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-func closeDBConnection(conn *pgx.Conn) {
-	conn.Close(context.Background())
 }
