@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -10,46 +10,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const OnlyID int = 1
-const AllField int = 2
-const Body int = 3
-
 type item struct {
-	ID         int
-	Name       string
-	Quantity   int
-	Unit_coast int
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Quantity   int    `json:"quantity"`
+	Unit_coast int    `json:"unit_coast"`
 }
 
 var product = []item{}
 
-func CheckValid(check item, flags int) bool { // true - ошибка, false - ошибок нет
-	switch flags {
-	case 1: // Check valid ID
-		if check.ID == 0 {
-			return true
-		} else {
-			return false
-		}
-	case 2: // Check valid ID и Name
-		if check.ID == 0 || len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 {
-			return true
-		} else {
-			return false
-		}
-	case 3:
-		if len(check.Name) == 0 || check.Quantity == 0 || check.Unit_coast == 0 { // Проверка для записи
-			return true
-		} else {
-			return false
-		}
-	default:
-		return false
-	}
-}
-
-func main() {
-
+func serverRun() {
 	r := mux.NewRouter()
 	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
 	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET", "PUT", "DELETE")
