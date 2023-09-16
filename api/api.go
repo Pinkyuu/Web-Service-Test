@@ -11,6 +11,10 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func getDBConnection() (*pgx.Conn, error) {
 	config, err := pgx.ParseConfig("postgres://postgres:123@localhost/Web-Service")
 	if err != nil {
@@ -46,6 +50,7 @@ func ServerRun() {
 }
 
 func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
+	enableCors(&w)
 	switch r.Method {
 	case http.MethodGet:
 		getProductAll(w, r)
@@ -123,6 +128,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 }
 
 func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GET, PUT, DELETE
+	enableCors(&w)
 	switch r.Method {
 	case http.MethodGet:
 		getProductByIndex(w, r)
