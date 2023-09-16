@@ -17,7 +17,7 @@ Content-Type: application/json
 
 ### Put Product
 
-PUT http://localhost:8080/product/3
+PUT http://localhost:8080/product/5
 Content-Type: application/json
 
 {
@@ -28,6 +28,6 @@ Content-Type: application/json
 
 ### Delete Product
 
-DELETE  http://localhost:8080/product/3
+DELETE  http://localhost:8080/product/8
 
 
