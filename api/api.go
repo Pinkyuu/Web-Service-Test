@@ -23,14 +23,13 @@ var product = []Item{}
 
 func ServerRun() {
 	r := mux.NewRouter()
-	cors := handlers.CORS(
-		handlers.AllowedOrigins([]string{"*"}),
-		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"}),
-	)
+	origins := handlers.AllowedOrigins([]string{"*"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+	headers := handlers.AllowedHeaders([]string{"*"})
 	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
 	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET", "PUT", "DELETE")
 	log.Println("Server start listen port 8080!")
-	err := http.ListenAndServe("localhost:8080", cors(r))
+	err := http.ListenAndServe(":8080", handlers.CORS(headers, methods, origins)(r))
 	if err != nil {
 		log.Fatal(err)
 	}
