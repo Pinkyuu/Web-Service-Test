@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -18,25 +19,24 @@ type Item struct {
 	Unit_coast int    `json:"unit_coast"`
 }
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}
-
 var product = []Item{}
 
 func ServerRun() {
 	r := mux.NewRouter()
+	cors := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"}),
+	)
 	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
 	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET", "PUT", "DELETE")
 	log.Println("Server start listen port 8080!")
-	err := http.ListenAndServe("localhost:8080", r)
+	err := http.ListenAndServe("localhost:8080", cors(r))
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
-	enableCors(&w)
 	switch r.Method {
 	case http.MethodGet:
 		getProductAll(w, r)
@@ -84,7 +84,6 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 }
 
 func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GET, PUT, DELETE
-	enableCors(&w)
 	switch r.Method {
 	case http.MethodGet:
 		getProductByIndex(w, r)
