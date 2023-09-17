@@ -13,23 +13,27 @@ import (
 )
 
 type Item struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Quantity   int    `json:"quantity"`
-	Unit_coast int    `json:"unit_coast"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Quantity  int    `json:"quantity"`
+	Unit_cost int    `json:"unit_cost"`
 }
 
-var product = []Item{}
+var product = []Item{
+	{ID: 1, Name: "Product 1", Quantity: 10, Unit_cost: 100},
+	{ID: 2, Name: "Product 2", Quantity: 20, Unit_cost: 150},
+	{ID: 3, Name: "Product 3", Quantity: 100, Unit_cost: 10},
+}
 
 func ServerRun() {
 	r := mux.NewRouter()
-	origins := handlers.AllowedOrigins([]string{"*"})
+	origins := handlers.AllowedOrigins([]string{"http://localhost:4200"})
 	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
-	headers := handlers.AllowedHeaders([]string{"*"})
-	r.HandleFunc("/product", personHandler).Methods("GET", "POST")
+	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	r.HandleFunc("/product", personHandler).Methods("GET", "POST", "OPTIONS")
 	r.HandleFunc("/product/{id}", personHandlerByIndex).Methods("GET", "PUT", "DELETE")
 	log.Println("Server start listen port 8080!")
-	err := http.ListenAndServe(":8080", handlers.CORS(headers, methods, origins)(r))
+	err := http.ListenAndServe("localhost:8080", handlers.CORS(headers, methods, origins)(r))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,6 +45,8 @@ func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 		getProductAll(w, r)
 	case http.MethodPost:
 		postProduct(w, r)
+	case http.MethodOptions:
+		optionalproduct(w, r)
 	default:
 		http.Error(w, "invalid http method", http.StatusMethodNotAllowed)
 	}
@@ -66,7 +72,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 
 	newProduct.ID = len(product)
 
-	if valid.CheckBody(newProduct.Name, newProduct.Quantity, newProduct.Unit_coast) { // Проверка на пустые поля
+	if valid.CheckBody(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
@@ -78,8 +84,13 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonBytes)
+}
+
+func optionalproduct(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
+	w.WriteHeader(http.StatusOK)
 }
 
 func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GET, PUT, DELETE
@@ -96,7 +107,6 @@ func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GE
 }
 
 func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
-
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -125,7 +135,6 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 }
 
 func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
-
 	var changeProduct Item
 
 	err := json.NewDecoder(r.Body).Decode(&changeProduct)
@@ -143,7 +152,7 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	changeProduct.ID = number
 
-	if valid.CheckBody(changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_coast) { // Проверка на пустые поля
+	if valid.CheckBody(changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
