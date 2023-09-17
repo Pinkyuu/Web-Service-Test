@@ -18,13 +18,10 @@ type Item struct {
 	Unit_coast int    `json:"unit_coast"`
 }
 
-<<<<<<< HEAD
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-=======
->>>>>>> 247abc6441a2f583daffd984df0b80a549c7b8d1
 var product = []Item{}
 
 func ServerRun() {
