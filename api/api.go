@@ -1,7 +1,8 @@
 package server
 
 import (
-	valid "Web-Service/pkg"
+	database "Web-Service/pkg/database"
+	valid "Web-Service/pkg/function_check_valid"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,11 +20,7 @@ type Item struct {
 	Unit_cost int    `json:"unit_cost"`
 }
 
-var product = []Item{
-	{ID: 1, Name: "Product 1", Quantity: 10, Unit_cost: 100},
-	{ID: 2, Name: "Product 2", Quantity: 20, Unit_cost: 150},
-	{ID: 3, Name: "Product 3", Quantity: 100, Unit_cost: 10},
-}
+var product = []Item{}
 
 func ServerRun() {
 	r := mux.NewRouter()
@@ -53,6 +50,9 @@ func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 }
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
+
+	storage := database.NewMemoryPostgreSQL()
+	product := storage.GETALL()
 	jsonBytes, err := json.Marshal(product) // todo:Проверять, пустой ли Product
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -63,23 +63,24 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 }
 
 func postProduct(w http.ResponseWriter, r *http.Request) { // POST - создать новую запись о продукте
+
 	var newProduct Item
+
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	newProduct.ID = len(product)
-
 	if valid.CheckBody(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
 
-	product = append(product, newProduct)
+	storage := database.NewMemoryPostgreSQL()
+	var ID int = storage.POST(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost)
 
-	jsonBytes, err := json.Marshal(newProduct.ID)
+	jsonBytes, err := json.Marshal(ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -107,6 +108,9 @@ func personHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GE
 }
 
 func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
+
+	var prod Item
+
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -118,23 +122,24 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 		fmt.Fprintf(w, "Not correct ID: '%v'", number)
 	}
 
-	for _, p := range product {
-		if p.ID == number {
-			jsonBytes, err := json.Marshal(p) // todo:Проверять, пустой ли Product
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			} else {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(jsonBytes)
-				break
-			}
-		}
+	storage := database.NewMemoryPostgreSQL()
+	prod.ID = number
+	prod.Name, prod.Quantity, prod.Unit_cost = storage.GET(number)
+
+	jsonBytes, err := json.Marshal(prod)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonBytes)
+
 	}
 
 }
 
 func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
+
 	var changeProduct Item
 
 	err := json.NewDecoder(r.Body).Decode(&changeProduct)
@@ -157,14 +162,9 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
-	for i, p := range product {
-		if p.ID == number {
-			product[i] = changeProduct
-			return
-		}
-	}
+	storage := database.NewMemoryPostgreSQL()
 
-	fmt.Fprintf(w, "Product id: '%v' not found ", number)
+	storage.PUT(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost)
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
@@ -176,13 +176,7 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for i, p := range product {
-		if p.ID == number {
-			product = append(product[:i], product[i+1:]...)
-			for a := i; a < len(product); a++ {
-				product[a].ID--
-			}
-			break
-		}
-	}
+	storage := database.NewMemoryPostgreSQL()
+
+	storage.DELETE(number)
 }

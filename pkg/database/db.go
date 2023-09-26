@@ -14,9 +14,9 @@ type Item struct {
 }
 
 var product = []Item{
-	{ID: 0, Name: "Product 1", Quantity: 10, Unit_cost: 100},
+	/*{ID: 0, Name: "Product 1", Quantity: 10, Unit_cost: 100},
 	{ID: 1, Name: "Product 2", Quantity: 20, Unit_cost: 150},
-	{ID: 2, Name: "Product 3", Quantity: 100, Unit_cost: 10},
+	{ID: 2, Name: "Product 3", Quantity: 100, Unit_cost: 10},*/
 }
 
 func getDBConnection() (*pgx.Conn, error) {
@@ -131,7 +131,7 @@ func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int
 }
 
 func (s *MemoryPostgreSQL) GETALL() []Item {
-
+	var product = []Item{}
 	conn, err := getDBConnection()
 	if err != nil {
 		panic(err)
@@ -166,6 +166,10 @@ func (s *MemoryPostgreSQL) POST(Name string, Quantity int, Unit_cost int) (ID in
 
 	var newProduct Item
 
+	newProduct.Name = Name
+	newProduct.Quantity = Quantity
+	newProduct.Unit_cost = Unit_cost
+
 	row := conn.QueryRow(context.Background(), `insert into "items"("Name", "Quantity", "Unit_coast") values($1, $2, $3) RETURNING "ID"`, newProduct.Name, newProduct.Quantity, newProduct.Unit_cost)
 
 	err = row.Scan(&newProduct.ID)
@@ -196,6 +200,10 @@ func (s *MemoryPostgreSQL) PUT(ID int, Name string, Quantity int, Unit_cost int)
 	defer closeDBConnection(conn)
 
 	var changeProduct Item
+
+	changeProduct.Name = Name
+	changeProduct.Quantity = Quantity
+	changeProduct.Unit_cost = Unit_cost
 
 	conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 where "ID"=$4`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, ID)
 }
