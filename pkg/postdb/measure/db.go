@@ -1,4 +1,4 @@
-package database_measure
+package postdb_measure
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-type Measure struct {
+type measure struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
@@ -30,7 +30,7 @@ func closeDBConnection(conn *pgx.Conn) {
 }
 
 // Вывод по ID единицу измерения
-func GET(ID int) (Name string) {
+func Get(ID int) (Name string) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -38,7 +38,7 @@ func GET(ID int) (Name string) {
 	}
 	defer closeDBConnection(conn)
 
-	var p Measure
+	var p measure
 
 	row := conn.QueryRow(context.Background(), `select "ID", "Name" FROM "measure" WHERE "ID" = $1`, ID)
 
@@ -51,9 +51,9 @@ func GET(ID int) (Name string) {
 }
 
 // Вывод всех ед.измерений
-func GETALL() []Measure {
+func GetAll() []measure {
 
-	var Units = []Measure{}
+	var Units = []measure{}
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -61,7 +61,7 @@ func GETALL() []Measure {
 	}
 	defer closeDBConnection(conn)
 
-	var p Measure
+	var p measure
 
 	rows, err := conn.Query(context.Background(), "SELECT * FROM measure")
 	if err != nil {
@@ -80,7 +80,7 @@ func GETALL() []Measure {
 }
 
 // Добавление единицы измерения
-func POST(Name string) (ID int) {
+func Post(Name string) (ID int) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -88,7 +88,7 @@ func POST(Name string) (ID int) {
 	}
 	defer closeDBConnection(conn)
 
-	var newUnit Measure
+	var newUnit measure
 
 	newUnit.Name = Name
 
@@ -102,7 +102,7 @@ func POST(Name string) (ID int) {
 }
 
 // Удаление единицы измерения
-func DELETE(ID int) {
+func Delete(ID int) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -115,7 +115,7 @@ func DELETE(ID int) {
 }
 
 // Изменение единицы измерения
-func PUT(ID int, Name string) {
+func Put(ID int, Name string) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -123,7 +123,7 @@ func PUT(ID int, Name string) {
 	}
 	defer closeDBConnection(conn)
 
-	var changeUnit Measure
+	var changeUnit measure
 
 	changeUnit.Name = Name
 

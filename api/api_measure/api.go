@@ -1,8 +1,8 @@
 package api_measure
 
 import (
-	database_measure "Web-Service/pkg/database_measurement"
 	valid "Web-Service/pkg/function_check_valid"
+	postdb_measure "Web-Service/pkg/postdb/measure"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,7 +29,7 @@ func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 
 func getMeasureAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
 
-	Units := database_measure.GETALL()
+	Units := postdb_measure.GetAll()
 	jsonBytes, err := json.Marshal(Units)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,7 +54,7 @@ func postMeasure(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	var ID int = database_measure.POST(newUnits.Name)
+	var ID int = postdb_measure.Post(newUnits.Name)
 
 	jsonBytes, err := json.Marshal(ID)
 	if err != nil {
@@ -95,7 +95,7 @@ func getMeasureByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 	}
 
 	Unit.ID = number
-	Unit.Name = database_measure.GET(Unit.ID)
+	Unit.Name = postdb_measure.Get(Unit.ID)
 
 	jsonBytes, err := json.Marshal(Unit)
 	if err != nil {
@@ -133,7 +133,7 @@ func PutMeasureByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
-	database_measure.PUT(changeUnit.ID, changeUnit.Name)
+	postdb_measure.Put(changeUnit.ID, changeUnit.Name)
 }
 
 func DeleteMeasureByIndex(w http.ResponseWriter, r *http.Request) {
@@ -145,5 +145,5 @@ func DeleteMeasureByIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database_measure.DELETE(number)
+	postdb_measure.Delete(number)
 }

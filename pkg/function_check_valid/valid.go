@@ -39,3 +39,11 @@ func CheckUnitCoast(UnitCoast int) bool {
 		return false
 	}
 }
+
+func CheckMeasure(UnitCoast int) bool {
+	if UnitCoast == 0 {
+		return true
+	} else {
+		return false
+	}
+}

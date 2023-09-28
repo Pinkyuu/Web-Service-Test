@@ -1,8 +1,8 @@
 package api_product
 
 import (
-	"Web-Service/pkg/database_product"
 	valid "Web-Service/pkg/function_check_valid"
+	postdb_product "Web-Service/pkg/postdb/product"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,6 +16,7 @@ type item struct {
 	Name      string `json:"name"`
 	Quantity  int    `json:"quantity"`
 	Unit_cost int    `json:"unit_cost"`
+	Measure   int    `json:"measure"`
 }
 
 func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
@@ -33,8 +34,8 @@ func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
 
-	storage := database_product.NewMemoryPostgreSQL()
-	product := storage.GETALL()
+	storage := postdb_product.NewMemoryPostgreSQL()
+	product := storage.GetAll()
 	jsonBytes, err := json.Marshal(product)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -59,8 +60,8 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	storage := database_product.NewMemoryPostgreSQL()
-	var ID int = storage.POST(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost)
+	storage := postdb_product.NewMemoryPostgreSQL()
+	var ID int = storage.Post(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost, newProduct.Measure)
 
 	jsonBytes, err := json.Marshal(ID)
 	if err != nil {
@@ -104,9 +105,9 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 		fmt.Fprintf(w, "Not correct ID: '%v'", number)
 	}
 
-	storage := database_product.NewMemoryPostgreSQL()
+	storage := postdb_product.NewMemoryPostgreSQL()
 	prod.ID = number
-	prod.Name, prod.Quantity, prod.Unit_cost = storage.GET(number)
+	prod.Name, prod.Quantity, prod.Unit_cost, prod.Measure = storage.GET(number)
 
 	jsonBytes, err := json.Marshal(prod)
 	if err != nil {
@@ -144,9 +145,9 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
-	storage := database_product.NewMemoryPostgreSQL()
+	storage := postdb_product.NewMemoryPostgreSQL()
 
-	storage.PUT(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost)
+	storage.Put(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost)
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +159,7 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storage := database_product.NewMemoryPostgreSQL()
+	storage := postdb_product.NewMemoryPostgreSQL()
 
-	storage.DELETE(number)
+	storage.Delete(number)
 }
