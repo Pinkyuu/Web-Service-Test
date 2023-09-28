@@ -1,4 +1,4 @@
-package database
+package database_product
 
 import (
 	"context"
@@ -14,9 +14,9 @@ type Item struct {
 }
 
 var product = []Item{
-	/*{ID: 0, Name: "Product 1", Quantity: 10, Unit_cost: 100},
+	{ID: 0, Name: "Product 1", Quantity: 10, Unit_cost: 100},
 	{ID: 1, Name: "Product 2", Quantity: 20, Unit_cost: 150},
-	{ID: 2, Name: "Product 3", Quantity: 100, Unit_cost: 10},*/
+	{ID: 2, Name: "Product 3", Quantity: 100, Unit_cost: 10},
 }
 
 func getDBConnection() (*pgx.Conn, error) {
@@ -36,11 +36,11 @@ func closeDBConnection(conn *pgx.Conn) {
 }
 
 type Storage interface {
-	GET(ID int) Item
+	GET(int) Item
 	GETALL() []Item
-	POST(Name string, Quantity int, Unit_cost int) (ID int)
-	DELETE(ID int) error
-	PUT(ID int, Name string, Quantity int, Unit_cost int) error
+	POST(string, int, int) int
+	DELETE(int) error
+	PUT(int, string, int, int) error
 }
 
 type MemoryStorage struct {

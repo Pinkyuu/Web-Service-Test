@@ -1,7 +1,7 @@
 package server
 
 import (
-	database "Web-Service/pkg/database"
+	database_product "Web-Service/pkg/database_product"
 	valid "Web-Service/pkg/function_check_valid"
 	"encoding/json"
 	"fmt"
@@ -20,7 +20,10 @@ type Item struct {
 	Unit_cost int    `json:"unit_cost"`
 }
 
-var product = []Item{}
+type Measure struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
 
 func ServerRun() {
 	r := mux.NewRouter()
@@ -51,9 +54,9 @@ func personHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 
 func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
 
-	storage := database.NewMemoryPostgreSQL()
+	storage := database_product.NewMemoryPostgreSQL()
 	product := storage.GETALL()
-	jsonBytes, err := json.Marshal(product) // todo:Проверять, пустой ли Product
+	jsonBytes, err := json.Marshal(product)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -77,7 +80,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	storage := database.NewMemoryPostgreSQL()
+	storage := database_product.NewMemoryPostgreSQL()
 	var ID int = storage.POST(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost)
 
 	jsonBytes, err := json.Marshal(ID)
@@ -122,7 +125,7 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 		fmt.Fprintf(w, "Not correct ID: '%v'", number)
 	}
 
-	storage := database.NewMemoryPostgreSQL()
+	storage := database_product.NewMemoryPostgreSQL()
 	prod.ID = number
 	prod.Name, prod.Quantity, prod.Unit_cost = storage.GET(number)
 
@@ -162,7 +165,7 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
-	storage := database.NewMemoryPostgreSQL()
+	storage := database_product.NewMemoryPostgreSQL()
 
 	storage.PUT(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost)
 }
@@ -176,7 +179,7 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storage := database.NewMemoryPostgreSQL()
+	storage := database_product.NewMemoryPostgreSQL()
 
 	storage.DELETE(number)
 }
