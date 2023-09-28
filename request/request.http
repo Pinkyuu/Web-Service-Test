@@ -31,3 +31,29 @@ Content-Type: application/json
 DELETE  http://localhost:8080/product/39
 
 
+### Get Product
+GET http://localhost:8080/measure
+
+### POST measure
+POST http://localhost:8080/measure
+Content-Type: application/json
+
+{
+    "name": "Milk"
+}
+
+### Get Product 1
+GET http://localhost:8080/measure/1
+
+
+### PUT measure
+PUT http://localhost:8080/measure/2
+Content-Type: application/json
+
+{
+    "name": "Чай"
+}
+
+### Delete Product
+
+DELETE  http://localhost:8080/measure/5

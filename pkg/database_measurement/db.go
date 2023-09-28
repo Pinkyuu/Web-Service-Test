@@ -11,6 +11,7 @@ type Measure struct {
 	Name string `json:"name"`
 }
 
+// Открытие базы данных
 func getDBConnection() (*pgx.Conn, error) {
 	config, err := pgx.ParseConfig("postgres://postgres:123@localhost/Web-Service")
 	if err != nil {
@@ -23,10 +24,12 @@ func getDBConnection() (*pgx.Conn, error) {
 	return conn, nil
 }
 
+// Закрытие базы данных
 func closeDBConnection(conn *pgx.Conn) {
 	conn.Close(context.Background())
 }
 
+// Вывод по ID единицу измерения
 func GET(ID int) (Name string) {
 
 	conn, err := getDBConnection()
@@ -37,7 +40,7 @@ func GET(ID int) (Name string) {
 
 	var p Measure
 
-	row := conn.QueryRow(context.Background(), `select "ID", "Name" FROM "items" WHERE "ID" = $1`, ID)
+	row := conn.QueryRow(context.Background(), `select "ID", "Name" FROM "measure" WHERE "ID" = $1`, ID)
 
 	err = row.Scan(&p.ID, &p.Name)
 	if err != nil {
@@ -47,82 +50,82 @@ func GET(ID int) (Name string) {
 	return p.Name
 }
 
+// Вывод всех ед.измерений
 func GETALL() []Measure {
 
 	var Units = []Measure{}
-	/*conn, err := getDBConnection()
+
+	conn, err := getDBConnection()
 	if err != nil {
 		panic(err)
 	}
 	defer closeDBConnection(conn)
 
-	var p Units
+	var p Measure
 
-	rows, err := conn.Query(context.Background(), "SELECT * FROM items")
+	rows, err := conn.Query(context.Background(), "SELECT * FROM measure")
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_cost)
+		err = rows.Scan(&p.ID, &p.Name)
 		if err != nil {
 			panic(err)
 		}
-		product = append(product, p)
-	}*/
+		Units = append(Units, p)
+	}
 	return Units
 }
 
-func POST(Name string, Quantity int, Unit_cost int) (ID int) {
+// Добавление единицы измерения
+func POST(Name string) (ID int) {
 
-	/*conn, err := getDBConnection()
+	conn, err := getDBConnection()
 	if err != nil {
 		panic(err)
 	}
 	defer closeDBConnection(conn)
 
-	var newProduct Item
+	var newUnit Measure
 
-	newProduct.Name = Name
-	newProduct.Quantity = Quantity
-	newProduct.Unit_cost = Unit_cost
+	newUnit.Name = Name
 
-	row := conn.QueryRow(context.Background(), `insert into "items"("Name", "Quantity", "Unit_coast") values($1, $2, $3) RETURNING "ID"`, newProduct.Name, newProduct.Quantity, newProduct.Unit_cost)
+	row := conn.QueryRow(context.Background(), `insert into "measure"("Name") values($1) RETURNING "ID"`, newUnit.Name)
 
-	err = row.Scan(&newProduct.ID)
+	err = row.Scan(&newUnit.ID)
 	if err != nil {
 		panic(err)
 	}
-	return newProduct.ID*/
-	return 1
+	return newUnit.ID
 }
 
+// Удаление единицы измерения
 func DELETE(ID int) {
 
-	/*conn, err := getDBConnection()
-		if err != nil {
-			panic(err)
-		}
-
-		defer closeDBConnection(conn)
-
-		conn.Exec(context.Background(), `delete from "items" where "ID"=$1`, ID)
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
 	}
 
-	func () PUT(ID int, Name string, Quantity int, Unit_cost int) {
+	defer closeDBConnection(conn)
 
-		conn, err := getDBConnection()
-		if err != nil {
-			panic(err)
-		}
-		defer closeDBConnection(conn)
+	conn.Exec(context.Background(), `delete from "measure" where "ID"=$1`, ID)
+}
 
-		var changeProduct Item
+// Изменение единицы измерения
+func PUT(ID int, Name string) {
 
-		changeProduct.Name = Name
-		changeProduct.Quantity = Quantity
-		changeProduct.Unit_cost = Unit_cost
+	conn, err := getDBConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer closeDBConnection(conn)
 
-		conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 where "ID"=$4`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, ID)*/
+	var changeUnit Measure
+
+	changeUnit.Name = Name
+
+	conn.Exec(context.Background(), `update "measure" set "Name"=$1 where "ID"=$2`, changeUnit.Name, ID)
 }
