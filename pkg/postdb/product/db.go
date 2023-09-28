@@ -11,7 +11,7 @@ type item struct {
 	Name      string `json:"name"`
 	Quantity  int    `json:"quantity"`
 	Unit_cost int    `json:"unit_cost"`
-	Measure   int    `json:"measure`
+	Measure   int    `json:"measure"`
 }
 
 func getDBConnection() (*pgx.Conn, error) {
@@ -33,9 +33,9 @@ func closeDBConnection(conn *pgx.Conn) {
 type Storage interface {
 	GET(int) item
 	GETALL() []item
-	POST(string, int, int) int
+	POST(string, int, int, int) int
 	DELETE(int) error
-	PUT(int, string, int, int) error
+	PUT(int, string, int, int, int) error
 }
 
 type MemoryPostgreSQL struct {
@@ -130,7 +130,7 @@ func (s *MemoryPostgreSQL) Delete(ID int) {
 	conn.Exec(context.Background(), `delete from "items" where "ID"=$1`, ID)
 }
 
-func (s *MemoryPostgreSQL) Put(ID int, Name string, Quantity int, Unit_cost int) {
+func (s *MemoryPostgreSQL) Put(ID int, Name string, Quantity int, Unit_cost int, Measure int) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -143,6 +143,7 @@ func (s *MemoryPostgreSQL) Put(ID int, Name string, Quantity int, Unit_cost int)
 	changeProduct.Name = Name
 	changeProduct.Quantity = Quantity
 	changeProduct.Unit_cost = Unit_cost
+	changeProduct.Measure = Measure
 
 	conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 "Measure"=$4 where "ID"=$5`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, changeProduct.Measure, ID)
 }

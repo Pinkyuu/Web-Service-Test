@@ -147,7 +147,7 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	storage := postdb_product.NewMemoryPostgreSQL()
 
-	storage.Put(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost)
+	storage.Put(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, changeProduct.Measure)
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
