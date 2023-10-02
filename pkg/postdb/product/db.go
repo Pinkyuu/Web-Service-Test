@@ -7,11 +7,16 @@ import (
 )
 
 type item struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Quantity  int    `json:"quantity"`
-	Unit_cost int    `json:"unit_cost"`
-	Measure   int    `json:"measure"`
+	ID        int     `json:"id"`
+	Name      string  `json:"name"`
+	Quantity  int     `json:"quantity"`
+	Unit_cost int     `json:"unit_cost"`
+	Measure   measure `json:"measure"`
+}
+
+type measure struct {
+	ID    int    `json:"id"`
+	Value string `json:"name"`
 }
 
 func getDBConnection() (*pgx.Conn, error) {
@@ -48,7 +53,7 @@ func NewMemoryPostgreSQL() *MemoryPostgreSQL {
 	}
 }
 
-func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int, Measure int) {
+func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int, Measure_ID int, MeasureIDName string) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -57,15 +62,16 @@ func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int
 	defer closeDBConnection(conn)
 
 	var p item
-
-	row := conn.QueryRow(context.Background(), `select "ID", "Name", "Quantity", "Unit_coast", "Measure" FROM "items" WHERE "ID" = $1`, ID)
-
-	err = row.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_cost, &p.Measure)
+	row := conn.QueryRow(context.Background(), `SELECT items.id, items.name, items.quantity, items.unit_coast, items.measure_id, measure.value 
+	FROM items 
+	JOIN measure ON items.measure_id = measure.id 
+	WHERE items.id = $1`, ID)
+	err = row.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_cost, &p.Measure.ID, &p.Measure.Value)
 	if err != nil {
 		panic(err)
 	}
 
-	return p.Name, p.Quantity, p.Unit_cost, p.Measure
+	return p.Name, p.Quantity, p.Unit_cost, p.Measure.ID, p.Measure.Value
 }
 
 func (s *MemoryPostgreSQL) GetAll() []item {
@@ -78,14 +84,16 @@ func (s *MemoryPostgreSQL) GetAll() []item {
 
 	var p item
 
-	rows, err := conn.Query(context.Background(), "SELECT * FROM items")
+	rows, err := conn.Query(context.Background(), `SELECT items.id, items.name, items.quantity, items.unit_coast, items.measure_id, measure.value     
+	FROM items 
+	JOIN measure ON items.measure_id = measure.id `)
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_cost, &p.Measure)
+		err = rows.Scan(&p.ID, &p.Name, &p.Quantity, &p.Unit_cost, &p.Measure.ID, &p.Measure.Value)
 		if err != nil {
 			panic(err)
 		}
@@ -94,7 +102,7 @@ func (s *MemoryPostgreSQL) GetAll() []item {
 	return product
 }
 
-func (s *MemoryPostgreSQL) Post(Name string, Quantity int, Unit_cost int, Measure int) (ID int) {
+func (s *MemoryPostgreSQL) Post(Name string, Quantity int, Unit_cost int, Measure_ID int) (ID int) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -107,9 +115,9 @@ func (s *MemoryPostgreSQL) Post(Name string, Quantity int, Unit_cost int, Measur
 	newProduct.Name = Name
 	newProduct.Quantity = Quantity
 	newProduct.Unit_cost = Unit_cost
-	newProduct.Measure = Measure
+	newProduct.Measure.ID = Measure_ID
 
-	row := conn.QueryRow(context.Background(), `insert into "items"("Name", "Quantity", "Unit_coast", "Measure") values($1, $2, $3, $4) RETURNING "ID"`, newProduct.Name, newProduct.Quantity, newProduct.Unit_cost, newProduct.Measure)
+	row := conn.QueryRow(context.Background(), `insert into "items"(name, quantity, unit_coast, measure_id) values($1, $2, $3, $4) RETURNING "id"`, newProduct.Name, newProduct.Quantity, newProduct.Unit_cost, newProduct.Measure.ID)
 
 	err = row.Scan(&newProduct.ID)
 	if err != nil {
@@ -127,10 +135,14 @@ func (s *MemoryPostgreSQL) Delete(ID int) {
 
 	defer closeDBConnection(conn)
 
-	conn.Exec(context.Background(), `delete from "items" where "ID"=$1`, ID)
+	_, err = conn.Exec(context.Background(), `delete from items where id=$1`, ID)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
-func (s *MemoryPostgreSQL) Put(ID int, Name string, Quantity int, Unit_cost int, Measure int) {
+func (s *MemoryPostgreSQL) Put(ID int, Name string, Quantity int, Unit_cost int, Measure_ID int) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -138,12 +150,8 @@ func (s *MemoryPostgreSQL) Put(ID int, Name string, Quantity int, Unit_cost int,
 	}
 	defer closeDBConnection(conn)
 
-	var changeProduct item
-
-	changeProduct.Name = Name
-	changeProduct.Quantity = Quantity
-	changeProduct.Unit_cost = Unit_cost
-	changeProduct.Measure = Measure
-
-	conn.Exec(context.Background(), `update "items" set "Name"=$1, "Quantity"=$2, "Unit_coast"=$3 "Measure"=$4 where "ID"=$5`, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, changeProduct.Measure, ID)
+	_, err = conn.Exec(context.Background(), `update items set name=$1, quantity=$2, unit_coast=$3, measure_id=$4 where id=$5`, Name, Quantity, Unit_cost, Measure_ID, ID)
+	if err != nil {
+		panic(err)
+	}
 }

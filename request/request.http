@@ -3,7 +3,7 @@
 GET http://localhost:8080/product
 
 ###
-GET http://localhost:8080/product/37
+GET http://localhost:8080/product/38
 
 ### Post Product
 POST http://localhost:8080/product
@@ -17,18 +17,21 @@ Content-Type: application/json
 
 ### Put Product
 
-PUT http://localhost:8080/product/38
+PUT http://localhost:8080/product/44
 Content-Type: application/json
 
 {
-    "name": "Milk",
-    "Quantity": 150, 
-    "Unit_cost": 10
+    "name": "fff",
+    "quantity": 231,
+    "unit_cost": 44,
+    "measure": {
+      "id": 4
+    }
 }
 
 ### Delete Product
 
-DELETE  http://localhost:8080/product/39
+DELETE  http://localhost:8080/product/40
 
 
 ### Get Product

@@ -12,11 +12,16 @@ import (
 )
 
 type item struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Quantity  int    `json:"quantity"`
-	Unit_cost int    `json:"unit_cost"`
-	Measure   int    `json:"measure"`
+	ID        int     `json:"id"`
+	Name      string  `json:"name"`
+	Quantity  int     `json:"quantity"`
+	Unit_cost int     `json:"unit_cost"`
+	Measure   measure `json:"measure"`
+}
+
+type measure struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
@@ -61,7 +66,7 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 	}
 
 	storage := postdb_product.NewMemoryPostgreSQL()
-	var ID int = storage.Post(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost, newProduct.Measure)
+	var ID int = storage.Post(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost, newProduct.Measure.ID)
 
 	jsonBytes, err := json.Marshal(ID)
 	if err != nil {
@@ -107,7 +112,7 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 
 	storage := postdb_product.NewMemoryPostgreSQL()
 	prod.ID = number
-	prod.Name, prod.Quantity, prod.Unit_cost, prod.Measure = storage.GET(number)
+	prod.Name, prod.Quantity, prod.Unit_cost, prod.Measure.ID, prod.Measure.Name = storage.GET(number)
 
 	jsonBytes, err := json.Marshal(prod)
 	if err != nil {
@@ -147,7 +152,7 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	storage := postdb_product.NewMemoryPostgreSQL()
 
-	storage.Put(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, changeProduct.Measure)
+	storage.Put(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, changeProduct.Measure.ID)
 }
 
 func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
