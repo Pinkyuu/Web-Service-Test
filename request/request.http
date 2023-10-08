@@ -59,4 +59,4 @@ Content-Type: application/json
 
 ### Delete Product
 
-DELETE  http://localhost:8080/measure/5
+DELETE  http://localhost:8080/measure/2

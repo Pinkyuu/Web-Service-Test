@@ -6,15 +6,15 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-type item struct {
+type Item struct {
 	ID        int     `json:"id"`
 	Name      string  `json:"name"`
 	Quantity  int     `json:"quantity"`
 	Unit_cost int     `json:"unit_cost"`
-	Measure   measure `json:"measure"`
+	Measure   Measure `json:"measure"`
 }
 
-type measure struct {
+type Measure struct {
 	ID    int    `json:"id"`
 	Value string `json:"name"`
 }
@@ -35,25 +35,17 @@ func closeDBConnection(conn *pgx.Conn) {
 	conn.Close(context.Background())
 }
 
-type Storage interface {
-	GET(int) item
-	GETALL() []item
-	POST(string, int, int, int) int
-	DELETE(int) error
-	PUT(int, string, int, int, int) error
-}
-
 type MemoryPostgreSQL struct {
-	data map[int]item
+	data map[int]Item
 }
 
 func NewMemoryPostgreSQL() *MemoryPostgreSQL {
 	return &MemoryPostgreSQL{
-		data: make(map[int]item),
+		data: make(map[int]Item),
 	}
 }
 
-func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int, Measure_ID int, MeasureIDName string) {
+func (s *MemoryPostgreSQL) Get(ID int) (Name string, Quantity int, Unit_cost int, Measure_ID int, MeasureIDName string) {
 
 	conn, err := getDBConnection()
 	if err != nil {
@@ -61,7 +53,7 @@ func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int
 	}
 	defer closeDBConnection(conn)
 
-	var p item
+	var p Item
 	row := conn.QueryRow(context.Background(), `SELECT items.id, items.name, items.quantity, items.unit_coast, items.measure_id, measure.value 
 	FROM items 
 	JOIN measure ON items.measure_id = measure.id 
@@ -74,15 +66,15 @@ func (s *MemoryPostgreSQL) GET(ID int) (Name string, Quantity int, Unit_cost int
 	return p.Name, p.Quantity, p.Unit_cost, p.Measure.ID, p.Measure.Value
 }
 
-func (s *MemoryPostgreSQL) GetAll() []item {
-	var product = []item{}
+func (s *MemoryPostgreSQL) GetAll() []Item {
+	var product = []Item{}
 	conn, err := getDBConnection()
 	if err != nil {
 		panic(err)
 	}
 	defer closeDBConnection(conn)
 
-	var p item
+	var p Item
 
 	rows, err := conn.Query(context.Background(), `SELECT items.id, items.name, items.quantity, items.unit_coast, items.measure_id, measure.value     
 	FROM items 
@@ -110,7 +102,7 @@ func (s *MemoryPostgreSQL) Post(Name string, Quantity int, Unit_cost int, Measur
 	}
 	defer closeDBConnection(conn)
 
-	var newProduct item
+	var newProduct Item
 
 	newProduct.Name = Name
 	newProduct.Quantity = Quantity

@@ -7,8 +7,8 @@ import (
 )
 
 type measure struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID    int    `json:"id"`
+	Value string `json:"value"`
 }
 
 // Открытие базы данных
@@ -40,14 +40,14 @@ func Get(ID int) (Name string) {
 
 	var p measure
 
-	row := conn.QueryRow(context.Background(), `select "ID", "Name" FROM "measure" WHERE "ID" = $1`, ID)
+	row := conn.QueryRow(context.Background(), `select "id", "value" FROM "measure" WHERE "id" = $1`, ID)
 
-	err = row.Scan(&p.ID, &p.Name)
+	err = row.Scan(&p.ID, &p.Value)
 	if err != nil {
 		panic(err)
 	}
 
-	return p.Name
+	return p.Value
 }
 
 // Вывод всех ед.измерений
@@ -70,7 +70,7 @@ func GetAll() []measure {
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&p.ID, &p.Name)
+		err = rows.Scan(&p.ID, &p.Value)
 		if err != nil {
 			panic(err)
 		}
@@ -90,9 +90,9 @@ func Post(Name string) (ID int) {
 
 	var newUnit measure
 
-	newUnit.Name = Name
+	newUnit.Value = Name
 
-	row := conn.QueryRow(context.Background(), `insert into "measure"("Name") values($1) RETURNING "ID"`, newUnit.Name)
+	row := conn.QueryRow(context.Background(), `insert into "measure"("value") values($1) RETURNING "id"`, newUnit.Value)
 
 	err = row.Scan(&newUnit.ID)
 	if err != nil {
@@ -111,7 +111,10 @@ func Delete(ID int) {
 
 	defer closeDBConnection(conn)
 
-	conn.Exec(context.Background(), `delete from "measure" where "ID"=$1`, ID)
+	_, err = conn.Exec(context.Background(), `delete from "measure" where "id"=$1`, ID)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Изменение единицы измерения
@@ -125,7 +128,11 @@ func Put(ID int, Name string) {
 
 	var changeUnit measure
 
-	changeUnit.Name = Name
+	changeUnit.Value = Name
 
-	conn.Exec(context.Background(), `update "measure" set "Name"=$1 where "ID"=$2`, changeUnit.Name, ID)
+	_, err = conn.Exec(context.Background(), `update "measure" set "value"=$1 where "id"=$2`, changeUnit.Value, ID)
+	if err != nil {
+		panic(err)
+	}
+
 }

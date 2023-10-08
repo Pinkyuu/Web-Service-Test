@@ -11,25 +11,24 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type item struct {
-	ID        int     `json:"id"`
-	Name      string  `json:"name"`
-	Quantity  int     `json:"quantity"`
-	Unit_cost int     `json:"unit_cost"`
-	Measure   measure `json:"measure"`
-}
+type item = postdb_product.Item
+type measure = postdb_product.Measure
 
-type measure struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+type Storage interface {
+	Get(int) (string, int, int, int, string)
+	GetAll() []item
+	Post(string, int, int, int) int
+	Delete(int)
+	Put(int, string, int, int, int)
 }
 
 func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
+	storage := postdb_product.NewMemoryPostgreSQL()
 	switch r.Method {
 	case http.MethodGet:
-		getProductAll(w, r)
+		getProductAll(w, r, storage)
 	case http.MethodPost:
-		postProduct(w, r)
+		postProduct(w, r, storage)
 	case http.MethodOptions:
 		optionalproduct(w, r)
 	default:
@@ -37,9 +36,8 @@ func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
 	}
 }
 
-func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
+func getProductAll(w http.ResponseWriter, r *http.Request, storage Storage) { // GET - получить список всех продуктов
 
-	storage := postdb_product.NewMemoryPostgreSQL()
 	product := storage.GetAll()
 	jsonBytes, err := json.Marshal(product)
 	if err != nil {
@@ -47,10 +45,13 @@ func getProductAll(w http.ResponseWriter, r *http.Request) { // GET - получ
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonBytes)
+	_, err = w.Write(jsonBytes)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func postProduct(w http.ResponseWriter, r *http.Request) { // POST - создать новую запись о продукте
+func postProduct(w http.ResponseWriter, r *http.Request, storage Storage) { // POST - создать новую запись о продукте
 
 	var newProduct item
 
@@ -65,7 +66,6 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	storage := postdb_product.NewMemoryPostgreSQL()
 	var ID int = storage.Post(newProduct.Name, newProduct.Quantity, newProduct.Unit_cost, newProduct.Measure.ID)
 
 	jsonBytes, err := json.Marshal(ID)
@@ -75,7 +75,10 @@ func postProduct(w http.ResponseWriter, r *http.Request) { // POST - созда�
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonBytes)
+	_, err = w.Write(jsonBytes)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func optionalproduct(w http.ResponseWriter, r *http.Request) { // GET - получить список всех продуктов
@@ -83,19 +86,20 @@ func optionalproduct(w http.ResponseWriter, r *http.Request) { // GET - полу
 }
 
 func PersonHandlerByIndex(w http.ResponseWriter, r *http.Request) { // switch GET, PUT, DELETE
+	storage := postdb_product.NewMemoryPostgreSQL()
 	switch r.Method {
 	case http.MethodGet:
-		getProductByIndex(w, r)
+		getProductByIndex(w, r, storage)
 	case http.MethodPut:
-		PutProductByIndex(w, r)
+		PutProductByIndex(w, r, storage)
 	case http.MethodDelete:
-		DeleteProductByIndex(w, r)
+		DeleteProductByIndex(w, r, storage)
 	default:
 		http.Error(w, "invalid http method", http.StatusMethodNotAllowed)
 	}
 }
 
-func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Вывод продукта с индентификатором i
+func getProductByIndex(w http.ResponseWriter, r *http.Request, storage Storage) { // GET - Вывод продукта с индентификатором i
 
 	var prod item
 
@@ -110,9 +114,8 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 		fmt.Fprintf(w, "Not correct ID: '%v'", number)
 	}
 
-	storage := postdb_product.NewMemoryPostgreSQL()
 	prod.ID = number
-	prod.Name, prod.Quantity, prod.Unit_cost, prod.Measure.ID, prod.Measure.Name = storage.GET(number)
+	prod.Name, prod.Quantity, prod.Unit_cost, prod.Measure.ID, prod.Measure.Value = storage.Get(number)
 
 	jsonBytes, err := json.Marshal(prod)
 	if err != nil {
@@ -120,13 +123,16 @@ func getProductByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 		return
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonBytes)
+		_, err = w.Write(jsonBytes)
+		if err != nil {
+			panic(err)
+		}
 
 	}
 
 }
 
-func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
+func PutProductByIndex(w http.ResponseWriter, r *http.Request, storage Storage) { // PUT
 
 	var changeProduct item
 
@@ -150,12 +156,10 @@ func PutProductByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 		return
 	}
 
-	storage := postdb_product.NewMemoryPostgreSQL()
-
 	storage.Put(changeProduct.ID, changeProduct.Name, changeProduct.Quantity, changeProduct.Unit_cost, changeProduct.Measure.ID)
 }
 
-func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
+func DeleteProductByIndex(w http.ResponseWriter, r *http.Request, storage Storage) {
 
 	vars := mux.Vars(r)
 	number, err := strconv.Atoi(vars["id"])
@@ -163,8 +167,6 @@ func DeleteProductByIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	storage := postdb_product.NewMemoryPostgreSQL()
 
 	storage.Delete(number)
 }

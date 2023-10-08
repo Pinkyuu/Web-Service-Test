@@ -25,3 +25,12 @@ func ServerRun() {
 		log.Fatal(err)
 	}
 }
+
+/*router := mux.NewRouter()
+router.HandleFunc("/product", func(w http.ResponseWriter, r *http.Request) {
+    PersonHandler(w, r, storage)
+}).Methods("GET", "POST", "OPTIONS")
+
+func PersonHandler(w http.ResponseWriter, r *http.Request, storage Storage) {
+    // ваш код обработки запросов
+}*/
