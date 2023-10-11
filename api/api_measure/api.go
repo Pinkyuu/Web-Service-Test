@@ -12,8 +12,8 @@ import (
 )
 
 type measure struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID    int    `json:"id"`
+	Value string `json:"value"`
 }
 
 func PersonHandler(w http.ResponseWriter, r *http.Request) { // switch GET, POST
@@ -49,12 +49,12 @@ func postMeasure(w http.ResponseWriter, r *http.Request) { // POST - созда�
 		return
 	}
 
-	if valid.CheckName(newUnits.Name) { // Проверка на пустые поля
+	if valid.CheckName(newUnits.Value) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
 
-	var ID int = postdb_measure.Post(newUnits.Name)
+	var ID int = postdb_measure.Post(newUnits.Value)
 
 	jsonBytes, err := json.Marshal(ID)
 	if err != nil {
@@ -95,7 +95,7 @@ func getMeasureByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 	}
 
 	Unit.ID = number
-	Unit.Name = postdb_measure.Get(Unit.ID)
+	Unit.Value = postdb_measure.Get(Unit.ID)
 
 	jsonBytes, err := json.Marshal(Unit)
 	if err != nil {
@@ -104,7 +104,6 @@ func getMeasureByIndex(w http.ResponseWriter, r *http.Request) { // GET - Выв
 	} else {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonBytes)
-
 	}
 
 }
@@ -128,12 +127,12 @@ func PutMeasureByIndex(w http.ResponseWriter, r *http.Request) { // PUT
 
 	changeUnit.ID = number
 
-	if valid.CheckName(changeUnit.Name) { // Проверка на пустые поля
+	if valid.CheckName(changeUnit.Value) { // Проверка на пустые поля
 		fmt.Fprintf(w, "Invalid parameters!")
 		return
 	}
 
-	postdb_measure.Put(changeUnit.ID, changeUnit.Name)
+	postdb_measure.Put(changeUnit.ID, changeUnit.Value)
 }
 
 func DeleteMeasureByIndex(w http.ResponseWriter, r *http.Request) {

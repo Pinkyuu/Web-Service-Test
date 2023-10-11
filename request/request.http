@@ -10,9 +10,9 @@ POST http://localhost:8080/product
 Content-Type: application/json
 
 {
-    "name": "Milk",
-    "Quantity": 100, 
-    "Unit_cost": 10
+    "name": "fff",
+    "quantity": 231,
+    "unit_cost": 44
 }
 
 ### Put Product
@@ -25,7 +25,8 @@ Content-Type: application/json
     "quantity": 231,
     "unit_cost": 44,
     "measure": {
-      "id": 4
+      "id": 4,
+      "value": "хуй" 
     }
 }
 
@@ -42,7 +43,7 @@ POST http://localhost:8080/measure
 Content-Type: application/json
 
 {
-    "name": "Milk"
+    "value": "Milk"
 }
 
 ### Get Product 1
@@ -54,9 +55,9 @@ PUT http://localhost:8080/measure/2
 Content-Type: application/json
 
 {
-    "name": "Чай"
+    "value": "Чай"
 }
 
 ### Delete Product
 
-DELETE  http://localhost:8080/measure/2
+DELETE  http://localhost:8080/measure/12

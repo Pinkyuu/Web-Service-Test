@@ -16,7 +16,7 @@ type Item struct {
 
 type Measure struct {
 	ID    int    `json:"id"`
-	Value string `json:"name"`
+	Value string `json:"value"`
 }
 
 func getDBConnection() (*pgx.Conn, error) {
